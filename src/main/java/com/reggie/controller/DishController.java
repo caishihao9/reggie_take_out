@@ -55,6 +55,11 @@ public class DishController {
 
         dishService.saveWithFlavor(dishDto);
 
+        //清理某个分类下面的缓存数据
+        String key = "dish_" + dishDto.getCategoryId() + "_1";
+        redisTemplate.delete(key);
+
+
         return R.success("新增菜品成功");
     }
 
@@ -113,7 +118,6 @@ public class DishController {
     @DeleteMapping
     public R<String> delete(@RequestParam List<Long> ids){
         dishService.removeWithFlavor(ids);
-
         return R.success("删除菜品成功");
     }
 
@@ -130,11 +134,18 @@ public class DishController {
         return R.success(dishDto);
     }
 
+    /**
+     * 修改菜品数据
+     * @param dishDto
+     * @return
+     */
     @PutMapping
     public R<String> update(@RequestBody DishDto dishDto){
 
         dishService.updateWithFlavor(dishDto);
-
+        //清理某个分类下面的缓存数据
+        String key = "dish_" + dishDto.getCategoryId() + "_1";
+        redisTemplate.delete(key);
         return R.success("修改菜品成功");
     }
 
@@ -230,6 +241,13 @@ public class DishController {
         updateWrapper.set(status!=null,Dish::getStatus,status);
 
         dishService.update(updateWrapper);
+
+        //清理某个分类下面的缓存数据
+        LambdaQueryWrapper<Dish> queryWrapper2 = new LambdaQueryWrapper<>();
+        queryWrapper2.in(Dish::getId,ids);
+        Dish dish = dishService.getOne(queryWrapper2);
+        String key = "dish_" + dish.getCategoryId() + "_1";
+        redisTemplate.delete(key);
 
         return R.success("修改菜品状态成功");
 

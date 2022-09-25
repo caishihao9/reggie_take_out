@@ -11,6 +11,7 @@ import com.reggie.service.DishFlavorService;
 import com.reggie.service.DishService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     @Autowired
     private DishFlavorService dishFlavorService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
     /**
      * 新增菜品，同时插入菜品对应的口味数据
      * @param dishDto
@@ -68,6 +71,13 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             //如果菜品正在在售就不能删除，抛出自定义异常
             throw new CustomException("菜品正在启售状态，不能删除");
         }
+
+        //清理某个分类下面的缓存数据
+        LambdaQueryWrapper<Dish> queryWrapper2 = new LambdaQueryWrapper<>();
+        queryWrapper2.in(Dish::getId,ids);
+        Dish dish = this.getOne(queryWrapper2);
+        String key = "dish_" + dish.getCategoryId() + "_1";
+        redisTemplate.delete(key);
 
         //如果是停售状态则删除菜品
         this.removeByIds(ids);
