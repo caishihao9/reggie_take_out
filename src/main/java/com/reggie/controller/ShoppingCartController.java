@@ -98,6 +98,12 @@ public class ShoppingCartController {
         return R.success("清空购物车成功");
     }
 
+    /**
+     * 购物车-1
+     * @param shoppingCart
+     * @param request
+     * @return
+     */
     @PostMapping("/sub")
     public R<ShoppingCart> sub(@RequestBody ShoppingCart shoppingCart, HttpServletRequest request){
         Long userId = BaseContext.getCurrentId();
